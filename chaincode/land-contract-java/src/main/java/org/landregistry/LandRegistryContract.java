@@ -43,7 +43,7 @@ public final class LandRegistryContract implements ContractInterface {
 
     /**
      * Creates a new Land Asset on the blockchain.
-     * * @param ctx the transaction context
+     * @param ctx the transaction context
      * @param ulpin the Unique Land Parcel Identification Number (Primary Key)
      * @param gpsCoordinates the mathematical anchor
      * @param parentUlpin Lineage tracking (pass "NONE" for root assets)
