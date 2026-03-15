@@ -30,11 +30,13 @@ public final class LandRegistryContract implements ContractInterface {
         ASSET_NOT_FOUND,
         ASSET_ALREADY_EXISTS,
         ASSET_NOT_ACTIVE,
-        UNAUTHORIZED_SELLER // Added to support Rule 2: Ownership Verification
+        UNAUTHORIZED_SELLER, // Added to support Rule 2: Ownership Verification
+        INVALID_INPUT        // Added for basic input validation
     }
 
     /**
      * Initializes the ledger.
+     * @param ctx the transaction context
      */
     @Transaction(intent = Transaction.TYPE.SUBMIT)
     public void initLedger(final Context ctx) {
@@ -43,7 +45,7 @@ public final class LandRegistryContract implements ContractInterface {
 
     /**
      * Creates a new Land Asset on the blockchain.
-     * * @param ctx the transaction context
+     * @param ctx the transaction context
      * @param ulpin the Unique Land Parcel Identification Number (Primary Key)
      * @param gpsCoordinates the mathematical anchor
      * @param parentUlpin Lineage tracking (pass "NONE" for root assets)
@@ -55,13 +57,35 @@ public final class LandRegistryContract implements ContractInterface {
     public LandAsset createLandAsset(final Context ctx, final String ulpin, final String gpsCoordinates, 
                                      final String parentUlpin, final String currentOwnerId, final String documentHash) {
         
+        // --- INPUT VALIDATION PHASE ---
+        if (ulpin == null || ulpin.trim().isEmpty()) {
+            throw new ChaincodeException("ULPIN must not be null or empty", 
+                                         LandRegistryErrors.INVALID_INPUT.toString());
+        }
+        if (gpsCoordinates == null || gpsCoordinates.trim().isEmpty()) {
+            throw new ChaincodeException("GPS coordinates must not be null or empty", 
+                                         LandRegistryErrors.INVALID_INPUT.toString());
+        }
+        if (parentUlpin == null || parentUlpin.trim().isEmpty()) {
+            throw new ChaincodeException("Parent ULPIN must not be null or empty (use 'NONE' for root assets)", 
+                                         LandRegistryErrors.INVALID_INPUT.toString());
+        }
+        if (currentOwnerId == null || currentOwnerId.trim().isEmpty()) {
+            throw new ChaincodeException("Current owner ID must not be null or empty", 
+                                         LandRegistryErrors.INVALID_INPUT.toString());
+        }
+        if (documentHash == null || documentHash.trim().isEmpty()) {
+            throw new ChaincodeException("Document hash must not be null or empty", 
+                                         LandRegistryErrors.INVALID_INPUT.toString());
+        }
+
         // Validation: Ensure the ULPIN doesn't already exist
         if (assetExists(ctx, ulpin)) {
             throw new ChaincodeException("Land Asset with ULPIN " + ulpin + " already exists", 
                                          LandRegistryErrors.ASSET_ALREADY_EXISTS.toString());
         }
 
-        // Creation: Instantiate the Java object mapped to our updated model
+        // Creation: Instantiate the immutable Java object
         LandAsset land = new LandAsset(ulpin, gpsCoordinates, parentUlpin, currentOwnerId, documentHash, "ACTIVE");
 
         // Persistence: Convert to JSON and save to the CouchDB world state
@@ -72,7 +96,7 @@ public final class LandRegistryContract implements ContractInterface {
 
     /**
      * Executes Step 4: Smart Contract Execution to transfer land ownership.
-     * * @param ctx the transaction context
+     * @param ctx the transaction context
      * @param ulpin the Primary Key of the land being transferred
      * @param sellerId the ID of the current owner attempting the transfer
      * @param buyerId the ID of the new owner
@@ -82,7 +106,15 @@ public final class LandRegistryContract implements ContractInterface {
     @Transaction(intent = Transaction.TYPE.SUBMIT)
     public LandAsset transferLandOwnership(final Context ctx, final String ulpin, 
                                            final String sellerId, final String buyerId, final String newDocumentHash) {
-        
+         // Input Validation: Ensure buyerId and newDocumentHash are not null or blank
+         if (buyerId == null || buyerId.trim().isEmpty()) {
+             throw new ChaincodeException("Transaction Rejected: buyerId must not be null or blank",
+                                          "INVALID_BUYER_ID");
+         }
+         if (newDocumentHash == null || newDocumentHash.trim().isEmpty()) {
+             throw new ChaincodeException("Transaction Rejected: newDocumentHash must not be null or blank",
+                                          "INVALID_DOCUMENT_HASH");
+         }
         // RULE 1: Land Existence
         String landJson = ctx.getStub().getStringState(ulpin);
         if (landJson == null || landJson.isEmpty()) {
@@ -123,6 +155,9 @@ public final class LandRegistryContract implements ContractInterface {
 
     /**
      * Helper method to check if a land asset exists in the world state.
+     * @param ctx the transaction context
+     * @param ulpin the Unique Land Parcel Identification Number
+     * @return true if the asset exists, false otherwise
      */
     private boolean assetExists(final Context ctx, final String ulpin) {
         String landJson = ctx.getStub().getStringState(ulpin);
