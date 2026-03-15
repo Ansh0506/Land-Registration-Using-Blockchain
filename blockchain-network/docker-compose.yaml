@@ -2,6 +2,7 @@ version: '3.7'
 
 networks:
   land_network:
+    name: land_network
 
 services:
 
@@ -53,6 +54,10 @@ services:
       - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb0:5984
       - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=${COUCHDB_USER:-admin}
       - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=${COUCHDB_PASSWORD:-adminpw}
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/crypto/peerOrganizations/org1.landregistry.com/peers/peer0.org1.landregistry.com/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/crypto/peerOrganizations/org1.landregistry.com/peers/peer0.org1.landregistry.com/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/crypto/peerOrganizations/org1.landregistry.com/peers/peer0.org1.landregistry.com/tls/ca.crt
 
     volumes:
       - ./crypto-config:/etc/hyperledger/fabric/crypto
@@ -120,8 +125,8 @@ services:
       - ORDERER_GENERAL_LISTENPORT=7050
       - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
       - ORDERER_GENERAL_LOCALMSPDIR=/etc/hyperledger/fabric/crypto/ordererOrganizations/landregistry.com/orderers/orderer0.landregistry.com/msp
-      - ORDERER_GENERAL_GENESISFILE=/etc/hyperledger/fabric/genesisblock
-
+      - ORDERER_GENERAL_BOOTSTRAPMETHOD=genesisFile
+      - ORDERER_GENERAL_BOOTSTRAPFILE=/etc/hyperledger/fabric/genesisblock
       - ORDERER_GENERAL_TLS_ENABLED=true
       - ORDERER_GENERAL_TLS_PRIVATEKEY=/etc/hyperledger/fabric/crypto/ordererOrganizations/landregistry.com/orderers/orderer0.landregistry.com/tls/server.key
       - ORDERER_GENERAL_TLS_CERTIFICATE=/etc/hyperledger/fabric/crypto/ordererOrganizations/landregistry.com/orderers/orderer0.landregistry.com/tls/server.crt
