@@ -30,7 +30,7 @@ public class LandRegistryService {
     }
 
     public String transferOwnership(String ulpin, String newOwnerId) throws Exception {
-        byte[] result = contract.submitTransaction("transferOwnership", ulpin, newOwnerId);
+        byte[] result = contract.submitTransaction("transferLandOwnership", ulpin, "", "", newOwnerId); 
         return new String(result, StandardCharsets.UTF_8);
     }
 
@@ -42,7 +42,7 @@ public class LandRegistryService {
     // --- READ OPERATIONS (Fast Local Queries) ---
 
     public String readLandAsset(String ulpin) throws Exception {
-        byte[] result = contract.evaluateTransaction("readLandAsset", ulpin);
+        byte[] result = contract.evaluateTransaction("queryLandByUlpin", ulpin);
         return new String(result, StandardCharsets.UTF_8);
     }
 

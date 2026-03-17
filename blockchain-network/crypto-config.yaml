@@ -3,20 +3,37 @@ OrdererOrgs:
     Domain: landregistry.com
     Specs:
       - Hostname: orderer0
+        SANS:
+          - "localhost"
+          - "127.0.0.1"
       - Hostname: orderer1
+        SANS:
+          - "localhost"
+          - "127.0.0.1"
       - Hostname: orderer2
+        SANS:
+          - "localhost"
+          - "127.0.0.1"
 
 PeerOrgs:
   - Name: Org1
     Domain: org1.landregistry.com
+    EnableNodeOUs: true
     Template:
       Count: 1
+      SANS:
+        - "localhost"
+        - "127.0.0.1"
     Users:
       Count: 1
 
   - Name: Org2
     Domain: org2.landregistry.com
+    EnableNodeOUs: true
     Template:
       Count: 1
+      SANS:
+        - "localhost"
+        - "127.0.0.1"
     Users:
       Count: 1
